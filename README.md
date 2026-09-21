@@ -1,16 +1,32 @@
-## Hi there 👋
+# eFootball タレントデザイン シミュレーター
 
-<!--
-**yuta-efootball/yuta-efootball** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+スマートフォンのブラウザで利用・編集・公開しやすい、HTML/CSS/JavaScriptのみの静的Webアプリです。
 
-Here are some ideas to get you started:
+## ファイル
+- `index.html` UI本体
+- `style.css` レスポンシブUI
+- `script.js` 計算・状態管理・CSV取込
+- `config.js` パラメータ群・UI設定・ローカル確認用フォールバック
+- `players.csv` 選手カード。`liveLinkTargets` に選手ごとのライブリンク対象能力を `|` 区切りで登録できます（例：`speed|acceleration|stamina`）。
+- `coaches.json` 監督
+- `coachAptitude.json` 監督適性
+- `boosters.json` 通常ブースター
+- `README.md` この説明
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## スマートフォンだけでの使い方
+1. このフォルダをGitHub等の静的ホスティングへアップロード。
+2. `index.html`を公開URLから開く。
+3. データを変更したい場合はCSV/JSONを編集して再公開。
+4. 選手を増やす場合は、画面の「CSVを読み込む」から追加CSVを読み込むこともできます。
+
+## ローカルでの確認
+ブラウザで`index.html`を直接開いても、外部CSV/JSONのfetchが使えない環境では初期選手を含むフォールバックデータで画面確認できます。
+公開環境では同じフォルダのCSV/JSONが優先されます。
+
+## 計算上の注意
+- タレント振り分けkの能力上昇量 = `k - floor(k/4)`
+- タレント消費量 = 各ポイントについて`ceil(k/4)`を累積
+- ジャンプは「フィジカル」と「GK1」の両方に所属
+- 選手側ブースター対象能力のみ100以上を許可
+- 監督ブースターは最後に加算し、100突破可否は選手側ブースター対象かどうかで判定
+- ライブアップデートは選手データの `liveLinkTargets` を対象とします。A=+3、B=+1、C=+0を対象能力へ加算します。Cでも選択されていれば、その対象能力は選手側ブースター対象として100以上を許可します。

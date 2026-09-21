@@ -1,0 +1,17 @@
+{
+  "90": [
+    {"min": 40, "max": 55, "bonus": 1},
+    {"min": 56, "max": 82, "bonus": 2},
+    {"min": 83, "max": null, "bonus": 3}
+  ],
+  "89": [
+    {"min": 40, "max": 55, "bonus": 1},
+    {"min": 56, "max": 83, "bonus": 2},
+    {"min": 84, "max": null, "bonus": 3}
+  ],
+  "88": [
+    {"min": 40, "max": 56, "bonus": 1},
+    {"min": 57, "max": 84, "bonus": 2},
+    {"min": 85, "max": null, "bonus": 3}
+  ]
+}

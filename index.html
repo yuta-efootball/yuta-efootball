@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101216">
+  <title>eFootball タレントデザイン シミュレーター</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark">TD</div>
+      <div>
+        <h1>タレントデザイン</h1>
+        <p>eFootball 育成シミュレーター</p>
+      </div>
+    </div>
+    <button id="resetBtn" class="secondary-btn">配分をリセット</button>
+  </header>
+
+  <main class="app-shell">
+    <section class="panel search-panel">
+      <label for="playerSearch">選手検索</label>
+      <div class="search-wrap">
+        <input id="playerSearch" type="search" placeholder="選手名を入力（例：クヴァ）" autocomplete="off">
+        <div id="searchResults" class="search-results hidden"></div>
+      </div>
+      <div id="playerSummary" class="player-summary empty">選手を選択してください</div>
+    </section>
+
+    <section class="panel control-panel">
+      <div class="control-grid">
+        <label class="field">
+          <span>監督</span>
+          <select id="coachSelect"><option value="">未選択</option></select>
+        </label>
+        <label class="field">
+          <span>監督適性</span>
+          <select id="aptitudeSelect"><option value="">未選択</option></select>
+        </label>
+        <label class="field">
+          <span>追加ブースター</span>
+          <select id="additionalStat"></select>
+        </label>
+        <label class="field">
+          <span>ライブアップデート</span>
+          <div class="segmented" id="liveLinks">
+            <button type="button" data-live="A">A</button>
+            <button type="button" data-live="B">B</button>
+            <button type="button" data-live="C">C</button>
+          </div>
+        </label>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">追加ブースターの上昇値</div>
+        <div class="segmented" id="additionalValue">
+          <button type="button" data-add-value="1">+1</button>
+          <button type="button" data-add-value="2">+2</button>
+          <button type="button" data-add-value="3">+3</button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">選手ブースター</div>
+        <div class="booster-grid">
+          <label class="field"><span>通常ブースター①</span><select class="booster-select" data-slot="0"></select></label>
+          <label class="field"><span>通常ブースター②</span><select class="booster-select" data-slot="1"></select></label>
+          <label class="field"><span>通常ブースター③</span><select class="booster-select" data-slot="2"></select></label>
+          <label class="field edge-field"><span>エッジブースター</span><select id="edgeBooster"></select></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel allocation-panel">
+      <div class="section-head">
+        <div>
+          <h2>能力配分</h2>
+          <p>各群の振り分け値に応じて能力上昇量と消費ポイントを自動計算します。</p>
+        </div>
+        <div class="points-box">
+          <span>残りポイント</span>
+          <strong id="remainingPoints">0 / 0</strong>
+        </div>
+      </div>
+      <div id="groupGrid" class="group-grid"></div>
+    </section>
+
+    <section class="panel stats-panel">
+      <div class="section-head">
+        <div>
+          <h2>最終能力値</h2>
+          <p>タレントデザイン → 監督適性 → 選手側ブースター → 上限処理 → 監督ブースターの順で計算。</p>
+        </div>
+      </div>
+      <div id="statsGrid" class="stats-grid"></div>
+    </section>
+
+    <section class="panel csv-panel">
+      <div class="section-head">
+        <div>
+          <h2>選手データ管理</h2>
+          <p>CSVは1行＝1選手カード。読み込み時に必須項目・数値形式・範囲を検証します。</p>
+        </div>
+      </div>
+      <div class="csv-actions">
+        <label class="file-btn">
+          CSVを読み込む
+          <input id="csvInput" type="file" accept=".csv,text/csv">
+        </label>
+        <button id="reloadDataBtn" class="secondary-btn">外部データを再読込</button>
+      </div>
+      <div id="dataStatus" class="data-status"></div>
+    </section>
+  </main>
+
+  <footer>静的Webアプリ / HTML + CSS + JavaScript / データ分離設計</footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
