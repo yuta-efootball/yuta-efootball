@@ -15,9 +15,11 @@
     coachId: "",
     aptitude: "",
     normalBoosters: ["", ""],
+    normalBoosterValues: [null, null],
     additionalBooster: "",
     additionalValue: null,
     edgeBooster: "",
+    edgeValue: null,
     liveLink: ""
   };
 
@@ -146,13 +148,18 @@
 
     document.querySelectorAll(".booster-select").forEach((s,i)=>{
       fillSelect(s,boosterItems);
-      s.value=state.normalBoosters[i];
+      s.value=state.normalBoosters[i] || "";
     });
     fillSelect($("edgeBooster"), C.edgeStats.map(k=>({value:k,label:statNames[k]})));
     $("edgeBooster").value=state.edgeBooster;
 
     document.querySelectorAll("[data-live]").forEach(b=>b.classList.toggle("active", b.dataset.live===state.liveLink));
     document.querySelectorAll("[data-add-value]").forEach(b=>b.classList.toggle("active", Number(b.dataset.addValue)===state.additionalValue));
+    document.querySelectorAll("[data-normal-values]").forEach(group=>{
+      const slot=Number(group.dataset.normalValues);
+      group.querySelectorAll("[data-normal-value]").forEach(b=>b.classList.toggle("active", Number(b.dataset.normalValue)===state.normalBoosterValues[slot]));
+    });
+    document.querySelectorAll("[data-edge-value]").forEach(b=>b.classList.toggle("active", Number(b.dataset.edgeValue)===state.edgeValue));
   }
 
   function renderPlayerSummary(){
@@ -251,24 +258,28 @@
   // 選手側ブースター（通常2枠・追加ブースター・エッジ）の合算。
   function calculateSelectedPlayerBoosterBonus(){
     const bonus=Object.fromEntries(allStatKeys.map(k=>[k,0]));
-    state.normalBoosters.forEach(name=>{
-      if(!name) return;
-      (state.boosters[name]||[]).forEach(k=>addBoost(bonus,k,3));
+    state.normalBoosters.forEach((name,i)=>{
+      const value=state.normalBoosterValues[i];
+      if(!name || !value) return;
+      (state.boosters[name]||[]).forEach(k=>addBoost(bonus,k,value));
     });
     if(state.additionalBooster && state.additionalValue){
       (state.boosters[state.additionalBooster]||[]).forEach(k=>addBoost(bonus,k,state.additionalValue));
     }
-    if(state.edgeBooster) addBoost(bonus,state.edgeBooster,6);
+    if(state.edgeBooster && state.edgeValue) addBoost(bonus,state.edgeBooster,state.edgeValue);
     return bonus;
   }
 
   function playerBoosterTargetSet(){
     const set=new Set();
-    state.normalBoosters.forEach(name=>(state.boosters[name]||[]).forEach(k=>set.add(k)));
+    state.normalBoosters.forEach((name,i)=>{
+      if(!name || !state.normalBoosterValues[i]) return;
+      (state.boosters[name]||[]).forEach(k=>set.add(k));
+    });
     if(state.additionalBooster && state.additionalValue){
       (state.boosters[state.additionalBooster]||[]).forEach(k=>set.add(k));
     }
-    if(state.edgeBooster) set.add(state.edgeBooster);
+    if(state.edgeBooster && state.edgeValue) set.add(state.edgeBooster);
     if(state.liveLink && state.selectedPlayer){
       (state.selectedPlayer.liveLinkTargets||[]).forEach(k=>set.add(k));
     }
@@ -347,8 +358,8 @@
 
   function resetBuild(keepPlayer=true){
     state.allocations=Object.fromEntries(C.groups.map(g=>[g.id,0]));
-    state.coachId=""; state.aptitude=""; state.normalBoosters=["",""];
-    state.additionalBooster=""; state.additionalValue=null; state.edgeBooster=""; state.liveLink="";
+    state.coachId=""; state.aptitude=""; state.normalBoosters=["",""]; state.normalBoosterValues=[null,null];
+    state.additionalBooster=""; state.additionalValue=null; state.edgeBooster=""; state.edgeValue=null; state.liveLink="";
     if(!keepPlayer) state.selectedPlayer=null;
   }
 
@@ -376,7 +387,24 @@
   $("additionalBooster").addEventListener("change",e=>{state.additionalBooster=e.target.value;renderAll();});
   $("edgeBooster").addEventListener("change",e=>{state.edgeBooster=e.target.value;renderAll();});
 
-  document.querySelectorAll(".booster-select").forEach((s,i)=>s.addEventListener("change",e=>{state.normalBoosters[i]=e.target.value;renderAll();}));
+  document.querySelectorAll(".booster-select").forEach((s,i)=>s.addEventListener("change",e=>{
+    state.normalBoosters[i]=e.target.value;
+    renderAll();
+  }));
+
+  document.querySelectorAll("[data-normal-value]").forEach(b=>b.addEventListener("click",()=>{
+    const group=b.closest("[data-normal-values]");
+    const slot=Number(group.dataset.normalValues);
+    const value=Number(b.dataset.normalValue);
+    state.normalBoosterValues[slot]=state.normalBoosterValues[slot]===value?null:value;
+    renderControls(); renderAll();
+  }));
+
+  document.querySelectorAll("[data-edge-value]").forEach(b=>b.addEventListener("click",()=>{
+    const value=Number(b.dataset.edgeValue);
+    state.edgeValue=state.edgeValue===value?null:value;
+    renderControls(); renderAll();
+  }));
   document.querySelectorAll("[data-live]").forEach(b=>b.addEventListener("click",()=>{
     state.liveLink=state.liveLink===b.dataset.live?"":b.dataset.live; renderControls(); renderAll();
   }));

@@ -57,17 +57,17 @@ window.APP_CONFIG = {
     // 振り分け値 k の能力上昇は、各ポイントの消費段階の累積。
     // 1-4: cost 1, 5-8: cost 2, ... => growth = k - floor(k/4)
     costPerPoint(k) { return Math.ceil(k / 4); },
-    growth(k) { return k <= 0 ? 0 : k - Math.floor((k - 1) / 4); }
+    growth(k) { return Number(k) || 0; }
   },
   colors: {
     low: "#d83a3a",
     mid: "#ef8c24",
     high: "#9bcf3b",
-    elite: "#176b2c"
+    elite: "#21C08B"
   },
   personalityColors: {
-    weakFootFrequency: { "やや低い":"#d83a3a", "普通":"#ef8c24", "高い":"#9bcf3b", "最高":"#176b2c" },
-    weakFootAccuracy: { "やや低い":"#d83a3a", "普通":"#ef8c24", "高い":"#9bcf3b", "最高":"#176b2c" },
+    weakFootFrequency: { "やや低い":"#d83a3a", "普通":"#ef8c24", "高い":"#9bcf3b", "最高":"#21C08B" },
+    weakFootAccuracy: { "やや低い":"#d83a3a", "普通":"#ef8c24", "高い":"#9bcf3b", "最高":"#21C08B" },
     conditionWave: { "大きい":"#d83a3a", "普通":"#ef8c24", "小さい":"#9bcf3b" }
   }
 };

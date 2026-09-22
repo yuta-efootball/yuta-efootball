@@ -57,20 +57,32 @@
       <div class="subsection">
         <div class="subsection-title">選手ブースター</div>
         <div class="booster-grid">
-          <label class="field"><span>通常ブースター①</span><select class="booster-select" data-slot="0"></select></label>
-          <label class="field"><span>通常ブースター②</span><select class="booster-select" data-slot="1"></select></label>
-          <div class="field additional-booster-field">
-            <span>追加ブースター</span>
-            <select id="additionalBooster"></select>
-            <div class="segmented compact-segmented" id="additionalValue">
-              <button type="button" data-add-value="1">+1</button>
-              <button type="button" data-add-value="2">+2</button>
-              <button type="button" data-add-value="3">+3</button>
-            </div>
+          <div class="booster-slot">
+            <label class="field"><span>通常ブースター①</span><select class="booster-select" data-slot="0"></select></label>
+            <div class="booster-value-field"><span>上昇値</span><div class="segmented booster-value-buttons" data-normal-values="0">
+              <button type="button" data-normal-value="1">+1</button><button type="button" data-normal-value="2">+2</button><button type="button" data-normal-value="3">+3</button><button type="button" data-normal-value="4">+4</button>
+            </div></div>
           </div>
-          <label class="field edge-field"><span>エッジブースター</span><select id="edgeBooster"></select></label>
+          <div class="booster-slot">
+            <label class="field"><span>通常ブースター②</span><select class="booster-select" data-slot="1"></select></label>
+            <div class="booster-value-field"><span>上昇値</span><div class="segmented booster-value-buttons" data-normal-values="1">
+              <button type="button" data-normal-value="1">+1</button><button type="button" data-normal-value="2">+2</button><button type="button" data-normal-value="3">+3</button><button type="button" data-normal-value="4">+4</button>
+            </div></div>
+          </div>
+          <div class="booster-slot additional-slot">
+            <label class="field"><span>追加ブースター</span><select id="additionalBooster"></select></label>
+            <div class="booster-value-field"><span>上昇値</span><div class="segmented booster-value-buttons" id="additionalValue">
+              <button type="button" data-add-value="1">+1</button><button type="button" data-add-value="2">+2</button><button type="button" data-add-value="3">+3</button>
+            </div></div>
+          </div>
+          <div class="booster-slot edge-slot">
+            <label class="field edge-field"><span>エッジブースター</span><select id="edgeBooster"></select></label>
+            <div class="booster-value-field"><span>上昇値</span><div class="segmented booster-value-buttons" id="edgeValueButtons">
+              <button type="button" data-edge-value="6">+6</button>
+            </div></div>
+          </div>
         </div>
-        <p class="control-help">追加ブースターは、選択したブースターの4つの反映先すべてに、選択した+1 / +2 / +3を適用します。</p>
+        <p class="control-help">通常ブースターは各枠ごとに+1～+4、追加ブースターは+1～+3、エッジブースターは+6を個別に選択できます。</p>
       </div>
     </section>
 
