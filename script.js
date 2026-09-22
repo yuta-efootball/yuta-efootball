@@ -176,7 +176,7 @@
     const grid=$("groupGrid"); grid.innerHTML="";
     C.groups.forEach(g=>{
       const v=state.allocations[g.id]||0;
-      const growth=C.talent.growth(v);
+      const growth=v;
       const cost=calculateTalentCost(v);
       const card=document.createElement("div"); card.className="group-card";
       card.innerHTML=`
@@ -221,7 +221,7 @@
   function calculateTalentGrowth(){
     const growth={};
     C.groups.forEach(g=>{
-      const amount=C.talent.growth(state.allocations[g.id]||0);
+      const amount=state.allocations[g.id]||0;
       g.stats.forEach(k=>addBoost(growth,k,amount));
     });
     return growth;
