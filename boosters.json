@@ -1,24 +1,134 @@
 {
-  "オフザボール": ["offensiveAwareness","speed","acceleration","stamina"],
-  "バランサー": ["offensiveAwareness","acceleration","defensiveAwareness","stamina"],
-  "ストライカーセンス": ["offensiveAwareness","ballControl","finishing","acceleration"],
-  "シュート": ["ballControl","finishing","kickingPower","physicalContact"],
-  "ボールプロテクション": ["ballControl","ballKeeping","physicalContact","bodyControl"],
-  "ファンタジスタ": ["ballControl","dribbling","finishing","bodyControl"],
-  "テクニック": ["ballControl","dribbling","ballKeeping","lowPass"],
-  "ボールキャリー": ["dribbling","ballKeeping","speed","bodyControl"],
-  "レジスタ": ["ballKeeping","lowPass","defensiveAwareness","ballWinning"],
-  "パス": ["lowPass","loftedPass","curl","kickingPower"],
-  "クロス": ["loftedPass","curl","speed","stamina"],
-  "フリーキック": ["finishing","placeKicking","curl","kickingPower"],
-  "エアリアル": ["finishing","heading","jump","physicalContact"],
-  "エアリアルブロック": ["heading","defensiveAwareness","jump","physicalContact"],
-  "アジリティ": ["speed","acceleration","bodyControl","stamina"],
-  "デュエル": ["defensiveAwareness","ballWinning","speed","stamina"],
-  "シャットダウン": ["defensiveAwareness","ballWinning","defensiveEngagement","speed"],
-  "ディフェンス": ["defensiveAwareness","ballWinning","acceleration","jump"],
-  "ハードワーク": ["aggression","acceleration","physicalContact","stamina"],
-  "フィジカル": ["jump","physicalContact","bodyControl","stamina"],
-  "ゴールキーピング": ["gkAwareness","catching","clearing","coverage"],
-  "ゴールセービング": ["gkAwareness","clearing","coverage","reflexes"]
+  "オフザボール": [
+    "offensiveAwareness",
+    "speed",
+    "acceleration",
+    "stamina"
+  ],
+  "バランサー": [
+    "offensiveAwareness",
+    "acceleration",
+    "defensiveAwareness",
+    "stamina"
+  ],
+  "ストライカーセンス": [
+    "offensiveAwareness",
+    "ballControl",
+    "finishing",
+    "acceleration"
+  ],
+  "シュート": [
+    "ballControl",
+    "finishing",
+    "kickingPower",
+    "physicalContact"
+  ],
+  "ボールプロテクション": [
+    "ballControl",
+    "ballKeeping",
+    "physicalContact",
+    "bodyControl"
+  ],
+  "ファンタジスタ": [
+    "ballControl",
+    "dribbling",
+    "finishing",
+    "bodyControl"
+  ],
+  "テクニック": [
+    "ballControl",
+    "dribbling",
+    "ballKeeping",
+    "lowPass"
+  ],
+  "ボールキャリー": [
+    "dribbling",
+    "ballKeeping",
+    "speed",
+    "bodyControl"
+  ],
+  "レジスタ": [
+    "ballKeeping",
+    "lowPass",
+    "defensiveAwareness",
+    "ballWinning"
+  ],
+  "パス": [
+    "lowPass",
+    "loftedPass",
+    "curl",
+    "kickingPower"
+  ],
+  "クロス": [
+    "loftedPass",
+    "curl",
+    "speed",
+    "stamina"
+  ],
+  "フリーキック": [
+    "finishing",
+    "placeKicking",
+    "curl",
+    "kickingPower"
+  ],
+  "エアリアル": [
+    "finishing",
+    "heading",
+    "jump",
+    "physicalContact"
+  ],
+  "エアリアルブロック": [
+    "heading",
+    "defensiveAwareness",
+    "jump",
+    "physicalContact"
+  ],
+  "アジリティ": [
+    "speed",
+    "acceleration",
+    "bodyControl",
+    "stamina"
+  ],
+  "デュエル": [
+    "defensiveAwareness",
+    "ballWinning",
+    "speed",
+    "stamina"
+  ],
+  "シャットダウン": [
+    "defensiveAwareness",
+    "ballWinning",
+    "defensiveEngagement",
+    "speed"
+  ],
+  "ディフェンス": [
+    "defensiveAwareness",
+    "ballWinning",
+    "acceleration",
+    "jump"
+  ],
+  "ハードワーク": [
+    "aggression",
+    "acceleration",
+    "physicalContact",
+    "stamina"
+  ],
+  "フィジカル": [
+    "jump",
+    "physicalContact",
+    "bodyControl",
+    "stamina"
+  ],
+  "ゴールキーピング": [
+    "gkAwareness",
+    "catching",
+    "clearing",
+    "coverage"
+  ],
+  "ゴールセービング": [
+    "gkAwareness",
+    "clearing",
+    "coverage",
+    "reflexes"
+  ]
 }

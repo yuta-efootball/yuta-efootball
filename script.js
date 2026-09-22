@@ -14,10 +14,10 @@
     allocations: Object.fromEntries(C.groups.map(g => [g.id, 0])),
     coachId: "",
     aptitude: "",
-    normalBoosters: ["","",""],
-    edgeBooster: "",
-    additionalStat: "",
+    normalBoosters: ["", ""],
+    additionalBooster: "",
     additionalValue: null,
+    edgeBooster: "",
     liveLink: ""
   };
 
@@ -128,16 +128,22 @@
     return entries.length ? `${c.name}【${entries.join(", ")}】` : c.name;
   }
 
+  function personalityTag(label, type, value){
+    const color=C.personalityColors[type]?.[value] || "";
+    const style=color ? ` style="--tag-color:${color}"` : "";
+    return `<span class="tag personality-tag"${style}>${escapeHtml(label)} ${escapeHtml(value)}</span>`;
+  }
+
   function renderControls(){
     fillSelect($("coachSelect"), state.coaches.map(c=>({value:c.id,label:coachLabel(c)})));
     $("coachSelect").value=state.coachId;
     fillSelect($("aptitudeSelect"), Object.keys(state.aptitudeRules).sort((a,b)=>Number(b)-Number(a)).map(v=>({value:v,label:v})));
     $("aptitudeSelect").value=state.aptitude;
 
-    fillSelect($("additionalStat"), C.stats.map(([k,n])=>({value:k,label:n})));
-    $("additionalStat").value=state.additionalStat;
-
     const boosterItems=Object.keys(state.boosters).map(name=>({value:name,label:name}));
+    fillSelect($("additionalBooster"), boosterItems);
+    $("additionalBooster").value=state.additionalBooster;
+
     document.querySelectorAll(".booster-select").forEach((s,i)=>{
       fillSelect(s,boosterItems);
       s.value=state.normalBoosters[i];
@@ -158,9 +164,11 @@
       <div class="player-name">${escapeHtml(p.name)}${p.cardName && p.cardName!==p.name ? ` <span class="tag">${escapeHtml(p.cardName)}</span>`:""}</div>
       <div class="player-meta">
         <span class="tag">右/左：${escapeHtml(p.foot)}</span><span class="tag">身長 ${p.height}cm</span>
-        <span class="tag">逆足頻度 ${escapeHtml(p.weakFootFrequency)}</span><span class="tag">逆足精度 ${escapeHtml(p.weakFootAccuracy)}</span>
-        <span class="tag">波 ${escapeHtml(p.conditionWave)}</span><span class="tag">TP ${p.talentPoints}</span>
-        ${p.liveLinkTargets?.length ? `<span class="tag">ライブリンク対象：${p.liveLinkTargets.map(k=>escapeHtml(statNames[k]||k)).join("・")}</span>` : ""}
+        ${personalityTag("逆足頻度", "weakFootFrequency", p.weakFootFrequency)}
+        ${personalityTag("逆足精度", "weakFootAccuracy", p.weakFootAccuracy)}
+        ${personalityTag("波", "conditionWave", p.conditionWave)}
+        <span class="tag">TP ${p.talentPoints}</span>
+        ${p.liveLinkTargets?.length ? `<span class="tag live-target-tag">ライブリンク対象：${p.liveLinkTargets.map(k=>escapeHtml(statNames[k]||k)).join("・")}</span>` : ""}
       </div>`;
   }
 
@@ -172,7 +180,7 @@
       const cost=calculateTalentCost(v);
       const card=document.createElement("div"); card.className="group-card";
       card.innerHTML=`
-        <div class="group-icon">${g.icon}</div>
+        <div class="group-icon"><svg viewBox="0 0 64 64" aria-label="${escapeHtml(g.name)}"><use href="icons.svg#${g.icon}"></use></svg></div>
         <div>
           <div class="group-name">${g.name}</div>
           <div class="group-detail">能力 +${growth} / 消費 ${cost}TP</div>
@@ -231,22 +239,27 @@
     return bonus;
   }
 
+  // 選手側ブースター（通常2枠・追加ブースター・エッジ）の合算。
   function calculateSelectedPlayerBoosterBonus(){
     const bonus=Object.fromEntries(allStatKeys.map(k=>[k,0]));
     state.normalBoosters.forEach(name=>{
       if(!name) return;
       (state.boosters[name]||[]).forEach(k=>addBoost(bonus,k,3));
     });
+    if(state.additionalBooster && state.additionalValue){
+      (state.boosters[state.additionalBooster]||[]).forEach(k=>addBoost(bonus,k,state.additionalValue));
+    }
     if(state.edgeBooster) addBoost(bonus,state.edgeBooster,6);
-    if(state.additionalStat && state.additionalValue) addBoost(bonus,state.additionalStat,state.additionalValue);
     return bonus;
   }
 
   function playerBoosterTargetSet(){
     const set=new Set();
     state.normalBoosters.forEach(name=>(state.boosters[name]||[]).forEach(k=>set.add(k)));
+    if(state.additionalBooster && state.additionalValue){
+      (state.boosters[state.additionalBooster]||[]).forEach(k=>set.add(k));
+    }
     if(state.edgeBooster) set.add(state.edgeBooster);
-    if(state.additionalStat && state.additionalValue) set.add(state.additionalStat);
     if(state.liveLink && state.selectedPlayer){
       (state.selectedPlayer.liveLinkTargets||[]).forEach(k=>set.add(k));
     }
@@ -271,20 +284,37 @@
   function calculateFinalStats(){
     const p=state.selectedPlayer;
     if(!p) return {};
+
+    // 1. 初期能力
+    // 2. タレントデザイン
     const talent=calculateTalentGrowth();
-    const stage1=Object.fromEntries(allStatKeys.map(k=>[k,p[k]+(talent[k]||0)]));
-    const aptitude=calculateCoachAptitudeBonus(stage1);
-    const stage2=Object.fromEntries(allStatKeys.map(k=>[k,stage1[k]+aptitude[k]]));
+    const afterTalent=Object.fromEntries(allStatKeys.map(k=>[k,p[k]+(talent[k]||0)]));
+
+    // 3. 選手側ブースター（通常・追加・エッジ・ライブリンク）
     const playerBoost=calculateSelectedPlayerBoosterBonus();
     const live=calculateLiveLinkBonus();
-    const stage3=Object.fromEntries(allStatKeys.map(k=>[k,stage2[k]+playerBoost[k]+live[k]]));
+    const afterPlayerBoosters=Object.fromEntries(allStatKeys.map(k=>[
+      k, afterTalent[k]+playerBoost[k]+live[k]
+    ]));
+
+    // 4. 選手側ブースター対象かどうかを確定し、ここで99上限を適用。
     const target=playerBoosterTargetSet();
-    const capped=Object.fromEntries(allStatKeys.map(k=>[k,target.has(k)?stage3[k]:Math.min(stage3[k],99)]));
+    const afterCap=Object.fromEntries(allStatKeys.map(k=>[
+      k, target.has(k) ? afterPlayerBoosters[k] : Math.min(afterPlayerBoosters[k],99)
+    ]));
+
+    // 5. 監督適性は上限処理後の値を入力として計算。
+    const aptitude=calculateCoachAptitudeBonus(afterCap);
+    const afterAptitude=Object.fromEntries(allStatKeys.map(k=>[
+      k, afterCap[k]+aptitude[k]
+    ]));
+
+    // 6. 監督ブースターを最後に加算。監督ブースター自身は100突破条件を作らない。
+    //    したがって最終値も、選手側ブースター対象か否かで99上限を判定する。
     const manager=calculateManagerBoosterBonus();
-    // 監督ブースターは最後に加算。その後も、100突破可否は選手側ブースター対象で判定。
     return Object.fromEntries(allStatKeys.map(k=>{
-      const afterManager=capped[k]+manager[k];
-      return [k, target.has(k) ? afterManager : Math.min(afterManager,99)];
+      const finalValue=afterAptitude[k]+manager[k];
+      return [k, target.has(k) ? finalValue : Math.min(finalValue,99)];
     }));
   }
 
@@ -300,13 +330,16 @@
   }
 
   function selectPlayer(p){
-    state.selectedPlayer=p; resetBuild(false); state.selectedPlayer=p; renderControls(); renderAll();
+    state.selectedPlayer=p;
+    resetBuild(true);
+    state.selectedPlayer=p;
+    renderControls(); renderAll();
   }
 
   function resetBuild(keepPlayer=true){
     state.allocations=Object.fromEntries(C.groups.map(g=>[g.id,0]));
-    state.coachId=""; state.aptitude=""; state.normalBoosters=["","",""]; state.edgeBooster="";
-    state.additionalStat=""; state.additionalValue=null; state.liveLink="";
+    state.coachId=""; state.aptitude=""; state.normalBoosters=["",""];
+    state.additionalBooster=""; state.additionalValue=null; state.edgeBooster=""; state.liveLink="";
     if(!keepPlayer) state.selectedPlayer=null;
   }
 
@@ -331,7 +364,7 @@
 
   $("coachSelect").addEventListener("change",e=>{state.coachId=e.target.value;renderAll();});
   $("aptitudeSelect").addEventListener("change",e=>{state.aptitude=e.target.value;renderAll();});
-  $("additionalStat").addEventListener("change",e=>{state.additionalStat=e.target.value;renderAll();});
+  $("additionalBooster").addEventListener("change",e=>{state.additionalBooster=e.target.value;renderAll();});
   $("edgeBooster").addEventListener("change",e=>{state.edgeBooster=e.target.value;renderAll();});
 
   document.querySelectorAll(".booster-select").forEach((s,i)=>s.addEventListener("change",e=>{state.normalBoosters[i]=e.target.value;renderAll();}));

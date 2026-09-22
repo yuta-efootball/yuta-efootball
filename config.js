@@ -2,16 +2,16 @@
 // UI/計算設定。データ本体は players.csv / coaches.json / coachAptitude.json / boosters.json に分離。
 window.APP_CONFIG = {
   groups: [
-    { id: "finishing", name: "決定力", icon: "⚽", stats: ["finishing", "placeKicking", "curl"] },
-    { id: "passing", name: "パス", icon: "↗", stats: ["lowPass", "loftedPass"] },
-    { id: "dribbling", name: "ドリブル", icon: "◈", stats: ["dribbling", "ballControl", "ballKeeping"] },
-    { id: "acceleration", name: "瞬発力", icon: "⌁", stats: ["offensiveAwareness", "acceleration", "bodyControl"] },
-    { id: "legs", name: "脚力", icon: "⚡", stats: ["kickingPower", "speed", "stamina"] },
-    { id: "physical", name: "フィジカル", icon: "↟", stats: ["heading", "jump", "physicalContact"] },
-    { id: "defense", name: "ディフェンス", icon: "◒", stats: ["defensiveAwareness", "ballWinning", "aggression", "defensiveEngagement"] },
-    { id: "gk1", name: "GK1", icon: "✋", stats: ["gkAwareness", "jump"] },
-    { id: "gk2", name: "GK2", icon: "✋²", stats: ["clearing", "reflexes"] },
-    { id: "gk3", name: "GK3", icon: "✋³", stats: ["catching", "coverage"] }
+    { id: "finishing", name: "シュート", icon: "shoot", stats: ["finishing", "placeKicking", "curl"] },
+    { id: "passing", name: "パス", icon: "pass", stats: ["lowPass", "loftedPass"] },
+    { id: "dribbling", name: "ドリブル", icon: "dribble", stats: ["dribbling", "ballControl", "ballKeeping"] },
+    { id: "acceleration", name: "瞬発", icon: "quickness", stats: ["offensiveAwareness", "acceleration", "bodyControl"] },
+    { id: "legs", name: "脚力", icon: "lower-body", stats: ["kickingPower", "speed", "stamina"] },
+    { id: "physical", name: "フィジカル", icon: "physical", stats: ["heading", "jump", "physicalContact"] },
+    { id: "defense", name: "ディフェンス", icon: "defense", stats: ["defensiveAwareness", "ballWinning", "aggression", "defensiveEngagement"] },
+    { id: "gk1", name: "GK1", icon: "gk1", stats: ["gkAwareness", "jump"] },
+    { id: "gk2", name: "GK2", icon: "gk2", stats: ["clearing", "reflexes"] },
+    { id: "gk3", name: "GK3", icon: "gk3", stats: ["catching", "coverage"] }
   ],
   stats: [
     ["offensiveAwareness","オフェンスセンス"],
@@ -63,10 +63,12 @@ window.APP_CONFIG = {
     low: "#d83a3a",
     mid: "#ef8c24",
     high: "#9bcf3b",
-    elite: "#2f86ff"
+    elite: "#176b2c"
   },
-  icons: {
-    useTextFallback: true
+  personalityColors: {
+    weakFootFrequency: { "やや低い":"#d83a3a", "普通":"#ef8c24", "高い":"#9bcf3b", "最高":"#176b2c" },
+    weakFootAccuracy: { "やや低い":"#d83a3a", "普通":"#ef8c24", "高い":"#9bcf3b", "最高":"#176b2c" },
+    conditionWave: { "大きい":"#d83a3a", "普通":"#ef8c24", "小さい":"#9bcf3b" }
   }
 };
 

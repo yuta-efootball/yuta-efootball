@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#101216">
+  <meta name="app-version" content="v1.1">
   <title>eFootball タレントデザイン シミュレーター</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -40,10 +41,6 @@
           <select id="aptitudeSelect"><option value="">未選択</option></select>
         </label>
         <label class="field">
-          <span>追加ブースター</span>
-          <select id="additionalStat"></select>
-        </label>
-        <label class="field">
           <span>ライブアップデート</span>
           <div class="segmented" id="liveLinks">
             <button type="button" data-live="A">A</button>
@@ -51,14 +48,9 @@
             <button type="button" data-live="C">C</button>
           </div>
         </label>
-      </div>
-
-      <div class="subsection">
-        <div class="subsection-title">追加ブースターの上昇値</div>
-        <div class="segmented" id="additionalValue">
-          <button type="button" data-add-value="1">+1</button>
-          <button type="button" data-add-value="2">+2</button>
-          <button type="button" data-add-value="3">+3</button>
+        <div class="control-note">
+          <span>計算順</span>
+          <strong>選手側ブースター → 上限 → 監督適性 → 監督ブースター</strong>
         </div>
       </div>
 
@@ -67,9 +59,18 @@
         <div class="booster-grid">
           <label class="field"><span>通常ブースター①</span><select class="booster-select" data-slot="0"></select></label>
           <label class="field"><span>通常ブースター②</span><select class="booster-select" data-slot="1"></select></label>
-          <label class="field"><span>通常ブースター③</span><select class="booster-select" data-slot="2"></select></label>
+          <div class="field additional-booster-field">
+            <span>追加ブースター</span>
+            <select id="additionalBooster"></select>
+            <div class="segmented compact-segmented" id="additionalValue">
+              <button type="button" data-add-value="1">+1</button>
+              <button type="button" data-add-value="2">+2</button>
+              <button type="button" data-add-value="3">+3</button>
+            </div>
+          </div>
           <label class="field edge-field"><span>エッジブースター</span><select id="edgeBooster"></select></label>
         </div>
+        <p class="control-help">追加ブースターは、選択したブースターの4つの反映先すべてに、選択した+1 / +2 / +3を適用します。</p>
       </div>
     </section>
 
@@ -91,7 +92,7 @@
       <div class="section-head">
         <div>
           <h2>最終能力値</h2>
-          <p>タレントデザイン → 監督適性 → 選手側ブースター → 上限処理 → 監督ブースターの順で計算。</p>
+          <p>タレントデザイン → 選手側ブースター → 上限処理 → 監督適性 → 監督ブースターの順で計算。</p>
         </div>
       </div>
       <div id="statsGrid" class="stats-grid"></div>
@@ -115,7 +116,7 @@
     </section>
   </main>
 
-  <footer>静的Webアプリ / HTML + CSS + JavaScript / データ分離設計</footer>
+  <footer>静的Webアプリ / HTML + CSS + JavaScript / データ分離設計 / v1.1</footer>
 
   <script src="config.js"></script>
   <script src="script.js"></script>
