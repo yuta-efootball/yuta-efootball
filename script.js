@@ -218,10 +218,19 @@
 
   function addBoost(map,key,value){ if(key) map[key]=(map[key]||0)+value; }
 
+  // タレント振り分け値と能力上昇値は常に一致させる。
+  // 例：4振り→+4、5振り→+5、9振り→+9、13振り→+13。
+  // タレントポイントの消費コストは calculateTalentCost() 側で
+  // 1～4=1TP、5～8=2TP、9～12=3TP、13～16=4TP…を別途計算する。
+  function calculateTalentGrowthValue(allocation){
+    const value = Number(allocation) || 0;
+    return Math.max(0, value);
+  }
+
   function calculateTalentGrowth(){
     const growth={};
     C.groups.forEach(g=>{
-      const amount=state.allocations[g.id]||0;
+      const amount=calculateTalentGrowthValue(state.allocations[g.id]);
       g.stats.forEach(k=>addBoost(growth,k,amount));
     });
     return growth;
