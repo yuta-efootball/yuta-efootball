@@ -57,7 +57,7 @@ window.APP_CONFIG = {
     // 振り分け値 k の能力上昇は、各ポイントの消費段階の累積。
     // 1-4: cost 1, 5-8: cost 2, ... => growth = k - floor(k/4)
     costPerPoint(k) { return Math.ceil(k / 4); },
-    growth(k) { return k - Math.floor(k / 4); }
+    growth(k) { return k <= 0 ? 0 : k - Math.floor((k - 1) / 4); }
   },
   colors: {
     low: "#d83a3a",
