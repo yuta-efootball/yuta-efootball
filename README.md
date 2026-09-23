@@ -1,34 +1,22 @@
-# eFootball タレントデザイン シミュレーター v2.5
+# eFootball タレントデザイン シミュレーター v2.6
 
-v2.4からの差分ファイルです。今回の修正対象は以下の4ファイルです。
+v2.5からのデータ読み込み仕様を修正しました。
 
-- `script.js`
-- `index.html`
-- `style.css`
-- `README.md`
+## v2.6の変更内容
 
-## v2.5 変更点
+- フォールバックデータを復活。
+- `players.csv`、`coaches.json`、`coachAptitude.json`、`boosters.json` は、それぞれGitHub上の外部データを優先して使用。
+- 外部データの取得に失敗した場合は、そのデータだけフォールバックへ切り替える。
+- `players.csv` がGitHub上に存在し、内容が有効なら、フォールバックの選手データではなくCSVの選手データを使用。
+- これにより、CSV未配置・一時的な読み込み失敗時でも、監督・監督適性・ブースター・選手データを含むアプリを従来どおり利用可能。
+- 外部データを使用できた場合とフォールバックを使用した場合を画面下部のデータステータスに表示。
 
-### 1. フォールバックデータを使用しない
-選手データはGitHub Pages上の `players.csv` を正本として読み込みます。
+## GitHubへの更新方法
 
-`players.csv` の読み込みに失敗した場合、クヴァラツヘリア等のローカル確認用フォールバックデータへ切り替えません。エラー内容を画面のデータステータスに表示します。
+1. ZIPを解凍する。
+2. `script.js` と `README.md` の2ファイルだけをGitHubリポジトリへアップロードする。
+3. 既存の同名ファイルを置き換える。
+4. Commitする。
+5. GitHub Pagesの公開URLを再読み込みする。
 
-監督、監督適性、ブースターについても、外部JSONを読み込めない場合はフォールバックへ切り替えず、エラーとして扱います。
-
-### 2. 最終能力値の縦方向の余白を圧縮
-最終能力値カードの上下paddingを `0.3em` に設定し、スマートフォンで縦方向によりコンパクトに表示します。
-
-### 3. 選手検索の例を変更
-検索欄の例を「クヴァ」から「エムバペ」に変更しました。
-
-## GitHubへの反映
-
-この4ファイルだけを既存リポジトリへ上書きしてください。
-
-- `script.js`
-- `index.html`
-- `style.css`
-- `README.md`
-
-`config.js`、`players.csv`、`coaches.json`、`coachAptitude.json`、`boosters.json`、`icons.svg` は今回変更していません。
+`config.js`、`players.csv`、`coaches.json`、`coachAptitude.json`、`boosters.json`、`icons.svg`、`index.html`、`style.css` は変更していません。
