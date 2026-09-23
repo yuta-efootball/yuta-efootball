@@ -1,4 +1,4 @@
-/* script.js - v2.8 */
+/* script.js - v2.8.1 */
 (() => {
   "use strict";
 
@@ -17,8 +17,7 @@
     normalBoosters: ["", ""],
     additionalBooster: "",
     additionalValue: null,
-    edgeBooster: "",
-    liveLink: ""
+    edgeBooster: ""
   };
 
   const $ = id => document.getElementById(id);
@@ -35,9 +34,6 @@
     if(typeof p.ownedBoosters === "string"){
       out.ownedBoosters = p.ownedBoosters.trim() ? p.ownedBoosters.split("|").map(s=>s.trim()).filter(Boolean) : [];
     } else if(!Array.isArray(p.ownedBoosters)) out.ownedBoosters = [];
-    if(typeof p.liveLinkTargets === "string"){
-      out.liveLinkTargets = p.liveLinkTargets.trim() ? p.liveLinkTargets.split("|").map(s=>s.trim()).filter(Boolean) : [];
-    } else if(!Array.isArray(p.liveLinkTargets)) out.liveLinkTargets = [];
     return out;
   }
 
@@ -79,11 +75,6 @@
       }
       if(Number(p.height) < 0) errors.push(`CSV ${line}行目: height は0以上にしてください。`);
       if(Number(p.talentPoints) < 0) errors.push(`CSV ${line}行目: talentPoints は0以上にしてください。`);
-      if(p.liveLinkTargets !== undefined && String(p.liveLinkTargets).trim()){
-        String(p.liveLinkTargets).split("|").map(s=>s.trim()).filter(Boolean).forEach(k=>{
-          if(!allStatKeys.includes(k)) errors.push(`CSV ${line}行目: liveLinkTargets に未定義の能力キー「${k}」があります。`);
-        });
-      }
     });
     return errors;
   }
@@ -91,7 +82,7 @@
   async function loadExternalData(){
     // 選手データはGitHub Pages上の players.csv を必ず正本として使用する。
     // v2.5では、players.csvの読み込み失敗時に選手フォールバックへ切り替えない。
-    const csvResponse = await fetch(`./players.csv?v=2.5`, {cache:"no-store"});
+    const csvResponse = await fetch(`./players.csv?v=2.8.1`, {cache:"no-store"});
     if(!csvResponse.ok) throw new Error(`players.csv の読み込みに失敗しました（HTTP ${csvResponse.status}）。`);
     const csvText = await csvResponse.text();
     const csvRows = parseCsv(csvText);
@@ -102,9 +93,9 @@
     state.players = csvRows.map(normalizePlayer);
 
     const jsonResults = await Promise.allSettled([
-      fetch(`./coaches.json?v=2.5`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
-      fetch(`./coachAptitude.json?v=2.5`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
-      fetch(`./boosters.json?v=2.5`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
+      fetch(`./coaches.json?v=2.8.1`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./coachAptitude.json?v=2.8.1`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./boosters.json?v=2.8.1`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
     ]);
 
     const fallbackNotes=[];
@@ -121,12 +112,12 @@
     $("dataStatus").textContent=`players.csvから選手${state.players.length}名を読み込みました。監督${state.coaches.length}名 / ブースター${Object.keys(state.boosters).length}種${note}`;
   }
 
-  function applyV28Styles(){
-    if(document.getElementById("v28Styles")) return;
+  function applyV281Styles(){
+    if(document.getElementById("v281Styles")) return;
     const style=document.createElement("style");
-    style.id="v28Styles";
+    style.id="v281Styles";
     style.textContent=`
-      /* 最終能力値：v2.8：最終能力値カードの上下余白を従来の0.3emから0.15emへ半減 */
+      /* v2.8.1：最終能力値カードの上下余白0.15emを維持 */
       .stat-card{padding-top:0.15em !important;padding-bottom:0.15em !important;}
     `;
     document.head.appendChild(style);
@@ -168,7 +159,6 @@
     fillSelect($("edgeBooster"), C.edgeStats.map(k=>({value:k,label:statNames[k]})));
     $("edgeBooster").value=state.edgeBooster;
 
-    document.querySelectorAll("[data-live]").forEach(b=>b.classList.toggle("active", b.dataset.live===state.liveLink));
     document.querySelectorAll("[data-add-value]").forEach(b=>b.classList.toggle("active", Number(b.dataset.addValue)===state.additionalValue));
   }
 
@@ -185,7 +175,6 @@
         ${personalityTag("逆足精度", "weakFootAccuracy", p.weakFootAccuracy)}
         ${personalityTag("波", "conditionWave", p.conditionWave)}
         <span class="tag">TP ${p.talentPoints}</span>
-        ${p.liveLinkTargets?.length ? `<span class="tag live-target-tag">ライブリンク対象：${p.liveLinkTargets.map(k=>escapeHtml(statNames[k]||k)).join("・")}</span>` : ""}
       </div>`;
   }
 
@@ -277,18 +266,7 @@
       (state.boosters[state.additionalBooster]||[]).forEach(k=>set.add(k));
     }
     if(state.edgeBooster) set.add(state.edgeBooster);
-    if(state.liveLink && state.selectedPlayer){
-      (state.selectedPlayer.liveLinkTargets||[]).forEach(k=>set.add(k));
-    }
     return set;
-  }
-
-  function calculateLiveLinkBonus(){
-    const bonus=Object.fromEntries(allStatKeys.map(k=>[k,0]));
-    const live={A:3,B:1,C:0}[state.liveLink];
-    if(!state.liveLink || !state.selectedPlayer || live === undefined) return bonus;
-    (state.selectedPlayer.liveLinkTargets||[]).forEach(k=>addBoost(bonus,k,live));
-    return bonus;
   }
 
   function calculateManagerBoosterBonus(){
@@ -307,11 +285,10 @@
     const talent=calculateTalentGrowth();
     const afterTalent=Object.fromEntries(allStatKeys.map(k=>[k,p[k]+(talent[k]||0)]));
 
-    // 3. 選手側ブースター（通常・追加・エッジ・ライブリンク）
+    // 3. 選手側ブースター（通常・追加・エッジ）
     const playerBoost=calculateSelectedPlayerBoosterBonus();
-    const live=calculateLiveLinkBonus();
     const afterPlayerBoosters=Object.fromEntries(allStatKeys.map(k=>[
-      k, afterTalent[k]+playerBoost[k]+live[k]
+      k, afterTalent[k]+playerBoost[k]
     ]));
 
     // 4. 選手側ブースター対象かどうかを確定し、ここで99上限を適用。
@@ -356,7 +333,7 @@
   function resetBuild(keepPlayer=true){
     state.allocations=Object.fromEntries(C.groups.map(g=>[g.id,0]));
     state.coachId=""; state.aptitude=""; state.normalBoosters=["",""];
-    state.additionalBooster=""; state.additionalValue=null; state.edgeBooster=""; state.liveLink="";
+    state.additionalBooster=""; state.additionalValue=null; state.edgeBooster="";
     if(!keepPlayer) state.selectedPlayer=null;
   }
 
@@ -386,9 +363,6 @@
   $("edgeBooster").addEventListener("change",e=>{state.edgeBooster=e.target.value;renderAll();});
 
   document.querySelectorAll(".booster-select").forEach((s,i)=>s.addEventListener("change",e=>{state.normalBoosters[i]=e.target.value;renderAll();}));
-  document.querySelectorAll("[data-live]").forEach(b=>b.addEventListener("click",()=>{
-    state.liveLink=state.liveLink===b.dataset.live?"":b.dataset.live; renderControls(); renderAll();
-  }));
   document.querySelectorAll("[data-add-value]").forEach(b=>b.addEventListener("click",()=>{
     const v=Number(b.dataset.addValue); state.additionalValue=state.additionalValue===v?null:v; renderControls(); renderAll();
   }));
@@ -420,8 +394,19 @@
     }catch(err){$("dataStatus").textContent=`CSV読み込みエラー：${err.message}`;}
   });
 
+  function removeLiveLinkControls(){
+    document.querySelectorAll("[data-live]").forEach(b=>b.remove());
+    const live = document.getElementById("liveLinks");
+    if(live){
+      const field = live.closest(".field");
+      if(field) field.remove();
+      else live.remove();
+    }
+  }
+
   async function init(){
-    applyV28Styles();
+    applyV281Styles();
+    removeLiveLinkControls();
     try{await loadExternalData();}
     catch(e){
       // 選手CSVをフォールバックへ置き換えず、読み込みエラーを明示する。
