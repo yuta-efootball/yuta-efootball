@@ -1,4 +1,4 @@
-/* script.js */
+/* script.js - v2.8 */
 (() => {
   "use strict";
 
@@ -89,55 +89,45 @@
   }
 
   async function loadExternalData(){
-    // v2.6: 外部データを優先し、読み込みできないデータ項目だけフォールバックを使用する。
-    // 選手データは players.csv がGitHub上に存在し、内容が有効なら必ずCSVを優先する。
-    const fallbackNotes=[];
+    // 選手データはGitHub Pages上の players.csv を必ず正本として使用する。
+    // v2.5では、players.csvの読み込み失敗時に選手フォールバックへ切り替えない。
+    const csvResponse = await fetch(`./players.csv?v=2.5`, {cache:"no-store"});
+    if(!csvResponse.ok) throw new Error(`players.csv の読み込みに失敗しました（HTTP ${csvResponse.status}）。`);
+    const csvText = await csvResponse.text();
+    const csvRows = parseCsv(csvText);
+    const errors = validatePlayers(csvRows);
+    if(errors.length) throw new Error(errors.join("\n"));
 
-    // 選手CSV：有効なCSVが取得できればCSVを優先。取得失敗・不正時のみ選手フォールバック。
-    try{
-      const csvResponse = await fetch(`./players.csv?v=2.6`, {cache:"no-store"});
-      if(!csvResponse.ok) throw new Error(`HTTP ${csvResponse.status}`);
-      const csvText = await csvResponse.text();
-      const csvRows = parseCsv(csvText);
-      const errors = validatePlayers(csvRows);
-      if(errors.length) throw new Error(errors.join("\n"));
-      if(!csvRows.length) throw new Error("CSVに選手データがありません。");
-      state.players = csvRows.map(normalizePlayer);
-    }catch(e){
-      state.players = deepClone(F.players || []);
-      fallbackNotes.push(`選手データはフォールバックを使用（players.csv: ${e.message}）`);
-    }
+    // CSVを先に確定させ、選手データだけは常に外部CSVを使用する。
+    state.players = csvRows.map(normalizePlayer);
 
-    // 監督・監督適性・ブースター：外部JSONがあれば優先し、取得できない場合は個別にフォールバック。
     const jsonResults = await Promise.allSettled([
-      fetch(`./coaches.json?v=2.6`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json()}),
-      fetch(`./coachAptitude.json?v=2.6`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json()}),
-      fetch(`./boosters.json?v=2.6`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json()})
+      fetch(`./coaches.json?v=2.5`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./coachAptitude.json?v=2.5`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./boosters.json?v=2.5`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
     ]);
 
+    const fallbackNotes=[];
     if(jsonResults[0].status === "fulfilled") state.coaches=jsonResults[0].value;
-    else { state.coaches=deepClone(F.coaches || []); fallbackNotes.push(`監督データはフォールバックを使用（${jsonResults[0].reason?.message || "読み込み失敗"}）`); }
+    else { state.coaches=deepClone(F.coaches); fallbackNotes.push("監督データはフォールバックを使用"); }
 
     if(jsonResults[1].status === "fulfilled") state.aptitudeRules=jsonResults[1].value;
-    else { state.aptitudeRules=deepClone(F.coachAptitude || {}); fallbackNotes.push(`監督適性データはフォールバックを使用（${jsonResults[1].reason?.message || "読み込み失敗"}）`); }
+    else { state.aptitudeRules=deepClone(F.coachAptitude); fallbackNotes.push("監督適性データはフォールバックを使用"); }
 
     if(jsonResults[2].status === "fulfilled") state.boosters=jsonResults[2].value;
-    else { state.boosters=deepClone(F.boosters || {}); fallbackNotes.push(`ブースターデータはフォールバックを使用（${jsonResults[2].reason?.message || "読み込み失敗"}）`); }
+    else { state.boosters=deepClone(F.boosters); fallbackNotes.push("ブースターデータはフォールバックを使用"); }
 
-    if(fallbackNotes.length){
-      $("dataStatus").textContent=`外部データを一部フォールバック使用：選手${state.players.length}名 / 監督${state.coaches.length}名 / ブースター${Object.keys(state.boosters).length}種\n${fallbackNotes.join("\n")}`;
-    }else{
-      $("dataStatus").textContent=`GitHub上の外部データを読み込みました：選手${state.players.length}名 / 監督${state.coaches.length}名 / ブースター${Object.keys(state.boosters).length}種`;
-    }
+    const note = fallbackNotes.length ? `（${fallbackNotes.join("、")}）` : "";
+    $("dataStatus").textContent=`players.csvから選手${state.players.length}名を読み込みました。監督${state.coaches.length}名 / ブースター${Object.keys(state.boosters).length}種${note}`;
   }
 
-  function applyV25Styles(){
-    if(document.getElementById("v25Styles")) return;
+  function applyV28Styles(){
+    if(document.getElementById("v28Styles")) return;
     const style=document.createElement("style");
-    style.id="v25Styles";
+    style.id="v28Styles";
     style.textContent=`
-      /* 最終能力値：上下の余白を文字高さの約0.3倍に圧縮 */
-      .stat-card{padding-top:0.3em !important;padding-bottom:0.3em !important;}
+      /* 最終能力値：v2.8：最終能力値カードの上下余白を従来の0.3emから0.15emへ半減 */
+      .stat-card{padding-top:0.15em !important;padding-bottom:0.15em !important;}
     `;
     document.head.appendChild(style);
   }
@@ -431,15 +421,15 @@
   });
 
   async function init(){
-    applyV25Styles();
+    applyV28Styles();
     try{await loadExternalData();}
     catch(e){
-      // v2.6では外部データの取得に失敗しても、フォールバックデータを維持して起動する。
-      state.players=deepClone(F.players || []);
-      state.coaches=deepClone(F.coaches || []);
-      state.aptitudeRules=deepClone(F.coachAptitude || {});
-      state.boosters=deepClone(F.boosters || {});
-      $("dataStatus").textContent=`外部データ読み込みエラー。フォールバックデータを使用中（選手${state.players.length}名）。`;
+      // 選手CSVをフォールバックへ置き換えず、読み込みエラーを明示する。
+      $("dataStatus").textContent=`選手CSV読み込みエラー：${e.message}`;
+      state.players=[];
+      state.coaches=[];
+      state.aptitudeRules={};
+      state.boosters={};
     }
     renderControls(); renderAll();
   }

@@ -1,22 +1,31 @@
-# eFootball タレントデザイン シミュレーター v2.6
+# eFootball タレントデザイン シミュレーター v2.8
 
-v2.5からのデータ読み込み仕様を修正しました。
+## v2.8の修正内容
 
-## v2.6の変更内容
+### 最終能力値の縦方向の余白をさらに圧縮
 
-- フォールバックデータを復活。
-- `players.csv`、`coaches.json`、`coachAptitude.json`、`boosters.json` は、それぞれGitHub上の外部データを優先して使用。
-- 外部データの取得に失敗した場合は、そのデータだけフォールバックへ切り替える。
-- `players.csv` がGitHub上に存在し、内容が有効なら、フォールバックの選手データではなくCSVの選手データを使用。
-- これにより、CSV未配置・一時的な読み込み失敗時でも、監督・監督適性・ブースター・選手データを含むアプリを従来どおり利用可能。
-- 外部データを使用できた場合とフォールバックを使用した場合を画面下部のデータステータスに表示。
+最終能力値の各パラメータカードについて、上下の内側余白を従来の `0.3em` から `0.15em` に変更しました。
 
-## GitHubへの更新方法
+- 変更前：上下 `0.3em`
+- v2.8：上下 `0.15em`
+- 変更量：従来の50%
 
-1. ZIPを解凍する。
-2. `script.js` と `README.md` の2ファイルだけをGitHubリポジトリへアップロードする。
-3. 既存の同名ファイルを置き換える。
-4. Commitする。
-5. GitHub Pagesの公開URLを再読み込みする。
+スマートフォンでの縦スクロール量をさらに減らすことを目的とした変更です。
 
-`config.js`、`players.csv`、`coaches.json`、`coachAptitude.json`、`boosters.json`、`icons.svg`、`index.html`、`style.css` は変更していません。
+## 今回アップロードするファイル
+
+今回変更したファイルは以下の2つです。
+
+- `script.js`
+- `README.md`
+
+`index.html`、`style.css`、`config.js`、`players.csv`、`coaches.json`、`coachAptitude.json`、`boosters.json`、`icons.svg` など、今回変更していないファイルは現在のGitHub上のものをそのまま使用してください。
+
+## GitHubへの更新
+
+1. `script.js` をGitHubリポジトリへアップロードして、既存の `script.js` を置き換える。
+2. `README.md` も同様に置き換える。
+3. Commitする。
+4. GitHub Pagesの公開ページを再読み込みする。
+
+今回の修正では、シミュレーションの計算ロジックやデータ読み込みロジックは変更していません。
