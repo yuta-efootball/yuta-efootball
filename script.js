@@ -1,4 +1,4 @@
-/* script.js - v2.8.1 */
+/* script.js - v2.9 */
 (() => {
   "use strict";
 
@@ -29,7 +29,11 @@
   function normalizePlayer(p){
     const out = {...p};
     out.height = Number(p.height);
+    out.playerType = p.playerType ?? p["選手タイプ"] ?? "";
+    out.skills = p.skills ?? p["スキル"] ?? "";
     out.talentPoints = Number(p.talentPoints);
+    // トレンド選手はタレントデザイン不可。
+    if(String(out.playerType).trim() === "トレンド") out.talentPoints = 0;
     for(const key of allStatKeys) out[key] = Number(p[key]);
     if(typeof p.ownedBoosters === "string"){
       out.ownedBoosters = p.ownedBoosters.trim() ? p.ownedBoosters.split("|").map(s=>s.trim()).filter(Boolean) : [];
@@ -62,7 +66,7 @@
   }
 
   function validatePlayers(players){
-    const required = ["name","cardName","foot","height","weakFootFrequency","weakFootAccuracy","conditionWave","talentPoints","attackType","offensivePlayingStyle","defensivePlayingStyle",...allStatKeys];
+    const required = ["name","cardName","foot","height","weakFootFrequency","weakFootAccuracy","conditionWave","talentPoints","attackType","offensivePlayingStyle","defensivePlayingStyle","playerType","skills",...allStatKeys];
     const errors=[];
     players.forEach((p,idx)=>{
       const line=idx+2;
@@ -81,8 +85,8 @@
 
   async function loadExternalData(){
     // 選手データはGitHub Pages上の players.csv を必ず正本として使用する。
-    // v2.5では、players.csvの読み込み失敗時に選手フォールバックへ切り替えない。
-    const csvResponse = await fetch(`./players.csv?v=2.8.1`, {cache:"no-store"});
+    // 選手CSVを正本として使用し、読み込み失敗時はフォールバックへ切り替えない。
+    const csvResponse = await fetch(`./players.csv?v=2.9`, {cache:"no-store"});
     if(!csvResponse.ok) throw new Error(`players.csv の読み込みに失敗しました（HTTP ${csvResponse.status}）。`);
     const csvText = await csvResponse.text();
     const csvRows = parseCsv(csvText);
