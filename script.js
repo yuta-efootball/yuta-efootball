@@ -1,4 +1,4 @@
-/* script.js - v2.9.1 */
+/* script.js - v2.8.1 */
 (() => {
   "use strict";
 
@@ -29,12 +29,7 @@
   function normalizePlayer(p){
     const out = {...p};
     out.height = Number(p.height);
-    out.playerType = p.playerType ?? p["選手タイプ"] ?? "";
-    out.skills = p.skills ?? p["スキル"] ?? "";
-    out.skillList = String(out.skills).split(/[|｜、,]/).map(s=>s.trim()).filter(Boolean);
     out.talentPoints = Number(p.talentPoints);
-    // トレンド選手はタレントデザイン不可。
-    if(String(out.playerType).trim() === "トレンド") out.talentPoints = 0;
     for(const key of allStatKeys) out[key] = Number(p[key]);
     if(typeof p.ownedBoosters === "string"){
       out.ownedBoosters = p.ownedBoosters.trim() ? p.ownedBoosters.split("|").map(s=>s.trim()).filter(Boolean) : [];
@@ -67,7 +62,7 @@
   }
 
   function validatePlayers(players){
-    const required = ["name","cardName","foot","height","weakFootFrequency","weakFootAccuracy","conditionWave","talentPoints","attackType","offensivePlayingStyle","defensivePlayingStyle","playerType","skills",...allStatKeys];
+    const required = ["name","cardName","position","foot","height","weakFootFrequency","weakFootAccuracy","conditionWave","talentPoints","attackType","offensivePlayingStyle","defensivePlayingStyle",...allStatKeys];
     const errors=[];
     players.forEach((p,idx)=>{
       const line=idx+2;
@@ -86,8 +81,8 @@
 
   async function loadExternalData(){
     // 選手データはGitHub Pages上の players.csv を必ず正本として使用する。
-    // 選手CSVを正本として使用し、読み込み失敗時はフォールバックへ切り替えない。
-    const csvResponse = await fetch(`./players.csv?v=2.9.1`, {cache:"no-store"});
+    // v2.5では、players.csvの読み込み失敗時に選手フォールバックへ切り替えない。
+    const csvResponse = await fetch(`./players.csv?v=2.9.2`, {cache:"no-store"});
     if(!csvResponse.ok) throw new Error(`players.csv の読み込みに失敗しました（HTTP ${csvResponse.status}）。`);
     const csvText = await csvResponse.text();
     const csvRows = parseCsv(csvText);
@@ -98,9 +93,9 @@
     state.players = csvRows.map(normalizePlayer);
 
     const jsonResults = await Promise.allSettled([
-      fetch(`./coaches.json?v=2.9.1`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
-      fetch(`./coachAptitude.json?v=2.9.1`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
-      fetch(`./boosters.json?v=2.9.1`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
+      fetch(`./coaches.json?v=2.8.1`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./coachAptitude.json?v=2.8.1`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./boosters.json?v=2.8.1`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
     ]);
 
     const fallbackNotes=[];
@@ -175,12 +170,12 @@
     el.innerHTML=`
       <div class="player-name">${escapeHtml(p.name)}${p.cardName && p.cardName!==p.name ? ` <span class="tag">${escapeHtml(p.cardName)}</span>`:""}</div>
       <div class="player-meta">
-        <span class="tag">右/左：${escapeHtml(p.foot)}</span><span class="tag">身長 ${p.height}cm</span>
+        <span class="position-tag">${escapeHtml(p.position || "未登録")}</span><span class="tag">右/左：${escapeHtml(p.foot)}</span><span class="tag">身長 ${p.height}cm</span>
         ${personalityTag("逆足頻度", "weakFootFrequency", p.weakFootFrequency)}
         ${personalityTag("逆足精度", "weakFootAccuracy", p.weakFootAccuracy)}
         ${personalityTag("波", "conditionWave", p.conditionWave)}
-      </div>
-      <div class="skills-block"><div class="skills-title">スキル</div><div class="skills-list">${(p.skillList||[]).map(skill=>`<div>${escapeHtml(skill)}</div>`).join("") || "未設定"}</div></div>`;
+        <span class="tag">TP ${p.talentPoints}</span>
+      </div>`;
   }
 
   function renderGroups(){
@@ -409,17 +404,8 @@
     }
   }
 
-  function relocateResetButton(){
-    const button=$("resetBtn");
-    const allocationHead=document.querySelector(".allocation-panel .section-head > div:first-child");
-    if(!button || !allocationHead) return;
-    allocationHead.appendChild(button);
-    button.classList.add("allocation-reset");
-  }
-
   async function init(){
     applyV281Styles();
-    relocateResetButton();
     removeLiveLinkControls();
     try{await loadExternalData();}
     catch(e){
