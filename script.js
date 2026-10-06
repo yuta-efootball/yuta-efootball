@@ -62,7 +62,7 @@
   }
 
   function validatePlayers(players){
-    const required = ["name","cardName","position","foot","height","weakFootFrequency","weakFootAccuracy","conditionWave","talentPoints","attackType","offensivePlayingStyle","defensivePlayingStyle",...allStatKeys];
+    const required = ["name","cardName","foot","height","weakFootFrequency","weakFootAccuracy","conditionWave","talentPoints","attackType","offensivePlayingStyle","defensivePlayingStyle",...allStatKeys];
     const errors=[];
     players.forEach((p,idx)=>{
       const line=idx+2;
@@ -82,7 +82,7 @@
   async function loadExternalData(){
     // 選手データはGitHub Pages上の players.csv を必ず正本として使用する。
     // v2.5では、players.csvの読み込み失敗時に選手フォールバックへ切り替えない。
-    const csvResponse = await fetch(`./players.csv?v=2.9.2`, {cache:"no-store"});
+    const csvResponse = await fetch(`./players.csv?v=2.8.1`, {cache:"no-store"});
     if(!csvResponse.ok) throw new Error(`players.csv の読み込みに失敗しました（HTTP ${csvResponse.status}）。`);
     const csvText = await csvResponse.text();
     const csvRows = parseCsv(csvText);
@@ -170,11 +170,14 @@
     el.innerHTML=`
       <div class="player-name">${escapeHtml(p.name)}${p.cardName && p.cardName!==p.name ? ` <span class="tag">${escapeHtml(p.cardName)}</span>`:""}</div>
       <div class="player-meta">
-        <span class="position-tag">${escapeHtml(p.position || "未登録")}</span><span class="tag">右/左：${escapeHtml(p.foot)}</span><span class="tag">身長 ${p.height}cm</span>
+        <span class="tag">右/左：${escapeHtml(p.foot)}</span><span class="tag">身長 ${p.height}cm</span>
         ${personalityTag("逆足頻度", "weakFootFrequency", p.weakFootFrequency)}
         ${personalityTag("逆足精度", "weakFootAccuracy", p.weakFootAccuracy)}
         ${personalityTag("波", "conditionWave", p.conditionWave)}
-        <span class="tag">TP ${p.talentPoints}</span>
+      </div>
+      <div class="player-skills">
+        <div class="player-skills-title">スキル</div>
+        <div class="player-skills-list">${String(p.skills||"").split(/[|,、]/).map(x=>x.trim()).filter(Boolean).map(x=>`<div>${escapeHtml(x)}</div>`).join("") || '<div class="player-skills-empty">未登録</div>'}</div>
       </div>`;
   }
 
@@ -394,6 +397,15 @@
     }catch(err){$("dataStatus").textContent=`CSV読み込みエラー：${err.message}`;}
   });
 
+  function moveResetButton(){
+    const btn=$("resetBtn");
+    const panel=document.querySelector(".allocation-panel");
+    const head=panel?.querySelector(".section-head");
+    if(!btn || !head || head.contains(btn)) return;
+    btn.classList.add("allocation-reset-btn");
+    head.appendChild(btn);
+  }
+
   function removeLiveLinkControls(){
     document.querySelectorAll("[data-live]").forEach(b=>b.remove());
     const live = document.getElementById("liveLinks");
@@ -406,6 +418,7 @@
 
   async function init(){
     applyV281Styles();
+    moveResetButton();
     removeLiveLinkControls();
     try{await loadExternalData();}
     catch(e){
