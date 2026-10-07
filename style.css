@@ -42,3 +42,13 @@ input[type=search],select{width:100%;min-height:38px;border-radius:9px;border:1p
 @media(max-width:390px){.v297-calc-order{font-size:8px;letter-spacing:-.04em;}}
 .segmented button.active{background:#fff !important;color:#111 !important;border-color:#fff !important;box-shadow:none;}
 .segmented button:not(.active){background:#11141a;color:#c7ccd4;}
+
+/* v2.9.7 */
+.control-grid .calculation-order,
+.control-grid .v297-calc-order,
+.control-grid .control-note.calculation-order{grid-column:span 2;}
+@media(max-width:520px){
+  .control-grid .calculation-order,
+  .control-grid .v297-calc-order,
+  .control-grid .control-note.calculation-order{grid-column:1 / -1;}
+}

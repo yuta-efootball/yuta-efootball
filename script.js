@@ -15,9 +15,11 @@
     coachId: "",
     aptitude: "",
     normalBoosters: ["", ""],
+    normalValues: [null, null],
     additionalBooster: "",
     additionalValue: null,
-    edgeBooster: ""
+    edgeBooster: "",
+    edgeValue: null
   };
 
   const $ = id => document.getElementById(id);
@@ -159,7 +161,16 @@
     fillSelect($("edgeBooster"), C.edgeStats.map(k=>({value:k,label:statNames[k]})));
     $("edgeBooster").value=state.edgeBooster;
 
-    document.querySelectorAll("[data-add-value]").forEach(b=>b.classList.toggle("active", Number(b.dataset.addValue)===state.additionalValue));
+    ensureBoosterValueControls();
+    document.querySelectorAll("[data-v297-booster]").forEach(b=>{
+      const type=b.dataset.v297Booster;
+      const v=Number(b.dataset.v297Value);
+      const current=type==="normal0" ? state.normalValues[0]
+        : type==="normal1" ? state.normalValues[1]
+        : type==="additional" ? state.additionalValue
+        : state.edgeValue;
+      b.classList.toggle("active", current===v);
+    });
   }
 
   function renderPlayerSummary(){
@@ -248,24 +259,29 @@
   // 選手側ブースター（通常2枠・追加ブースター・エッジ）の合算。
   function calculateSelectedPlayerBoosterBonus(){
     const bonus=Object.fromEntries(allStatKeys.map(k=>[k,0]));
-    state.normalBoosters.forEach(name=>{
-      if(!name) return;
-      (state.boosters[name]||[]).forEach(k=>addBoost(bonus,k,3));
+    state.normalBoosters.forEach((name,i)=>{
+      if(!name || !state.normalValues[i]) return;
+      (state.boosters[name]||[]).forEach(k=>addBoost(bonus,k,state.normalValues[i]));
     });
     if(state.additionalBooster && state.additionalValue){
       (state.boosters[state.additionalBooster]||[]).forEach(k=>addBoost(bonus,k,state.additionalValue));
     }
-    if(state.edgeBooster) addBoost(bonus,state.edgeBooster,6);
+    if(state.edgeBooster && state.edgeValue){
+      addBoost(bonus,state.edgeBooster,state.edgeValue);
+    }
     return bonus;
   }
 
   function playerBoosterTargetSet(){
     const set=new Set();
-    state.normalBoosters.forEach(name=>(state.boosters[name]||[]).forEach(k=>set.add(k)));
+    state.normalBoosters.forEach((name,i)=>{
+      if(!name || !state.normalValues[i]) return;
+      (state.boosters[name]||[]).forEach(k=>set.add(k));
+    });
     if(state.additionalBooster && state.additionalValue){
       (state.boosters[state.additionalBooster]||[]).forEach(k=>set.add(k));
     }
-    if(state.edgeBooster) set.add(state.edgeBooster);
+    if(state.edgeBooster && state.edgeValue) set.add(state.edgeBooster);
     return set;
   }
 
@@ -348,8 +364,8 @@
 
   function resetBuild(keepPlayer=true){
     state.allocations=Object.fromEntries(C.groups.map(g=>[g.id,0]));
-    state.coachId=""; state.aptitude=""; state.normalBoosters=["",""];
-    state.additionalBooster=""; state.additionalValue=null; state.edgeBooster="";
+    state.coachId=""; state.aptitude=""; state.normalBoosters=["",""]; state.normalValues=[null,null];
+    state.additionalBooster=""; state.additionalValue=null; state.edgeBooster=""; state.edgeValue=null;
     if(!keepPlayer) state.selectedPlayer=null;
   }
 
@@ -379,14 +395,35 @@
   $("edgeBooster").addEventListener("change",e=>{state.edgeBooster=e.target.value;renderAll();});
 
   document.querySelectorAll(".booster-select").forEach((s,i)=>s.addEventListener("change",e=>{state.normalBoosters[i]=e.target.value;renderAll();}));
-  // 上昇幅ボタンは「押した値」だけを有効値とする。
-  // 同じボタンを再度押すと解除し、別の値を押すと前の選択を解除して新しい値だけを選択する。
-  document.querySelectorAll("[data-add-value]").forEach(b=>b.addEventListener("click",()=>{
-    const v=Number(b.dataset.addValue);
-    state.additionalValue = state.additionalValue === v ? null : v;
+
+  // 4つの選手側ブースターの上昇幅ボタンを統一仕様にする。
+  // 押した値だけが有効、同じ値の再押下で解除、別の値で切替。
+  function ensureBoosterValueControls(){
+    const fields=[...document.querySelectorAll(".booster-value-field")];
+    fields.forEach((field,index)=>{
+      const type=index===0 ? "normal0" : index===1 ? "normal1" : index===2 ? "additional" : "edge";
+      field.querySelectorAll("button").forEach(btn=>{
+        const m=(btn.textContent||"").match(/\+(\d+)/);
+        if(!m) return;
+        btn.dataset.v297Booster=type;
+        btn.dataset.v297Value=m[1];
+        delete btn.dataset.addValue;
+      });
+    });
+  }
+  ensureBoosterValueControls();
+
+  document.addEventListener("click",e=>{
+    const b=e.target.closest("[data-v297-booster]");
+    if(!b) return;
+    const type=b.dataset.v297Booster, v=Number(b.dataset.v297Value);
+    if(type==="normal0") state.normalValues[0]=state.normalValues[0]===v?null:v;
+    else if(type==="normal1") state.normalValues[1]=state.normalValues[1]===v?null:v;
+    else if(type==="additional") state.additionalValue=state.additionalValue===v?null:v;
+    else state.edgeValue=state.edgeValue===v?null:v;
     renderControls();
     renderAll();
-  }));
+  });
 
   $("groupGrid").addEventListener("click",e=>{
     const inc=e.target.closest("[data-inc]"), dec=e.target.closest("[data-dec]");
