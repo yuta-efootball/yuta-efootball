@@ -1,4 +1,4 @@
-/* script.js - v2.9.4 */
+/* script.js - v2.9.7 */
 (() => {
   "use strict";
 
@@ -29,7 +29,6 @@
   function normalizePlayer(p){
     const out = {...p};
     out.height = Number(p.height);
-    out.overall = String(p.overall ?? "").trim() === "" ? "" : Number(p.overall);
     out.talentPoints = Number(p.talentPoints);
     for(const key of allStatKeys) out[key] = Number(p[key]);
     if(typeof p.ownedBoosters === "string"){
@@ -71,9 +70,6 @@
       for(const k of ["height","talentPoints",...allStatKeys]){
         if(p[k] !== undefined && (p[k] === "" || Number.isNaN(Number(p[k])))) errors.push(`CSV ${line}行目: ${k} は数値で指定してください。`);
       }
-      if(p.overall !== undefined && String(p.overall).trim() !== "" && Number.isNaN(Number(p.overall))){
-        errors.push(`CSV ${line}行目: overall は数値で指定してください。`);
-      }
       for(const k of allStatKeys){
         if(p[k] !== undefined && !Number.isNaN(Number(p[k])) && (Number(p[k])<40 || Number(p[k])>99)) errors.push(`CSV ${line}行目: ${k} は40～99の範囲で指定してください。`);
       }
@@ -86,7 +82,7 @@
   async function loadExternalData(){
     // 選手データはGitHub Pages上の players.csv を必ず正本として使用する。
     // v2.5では、players.csvの読み込み失敗時に選手フォールバックへ切り替えない。
-    const csvResponse = await fetch(`./players.csv?v=2.9.4`, {cache:"no-store"});
+    const csvResponse = await fetch(`./players.csv?v=2.9.7`, {cache:"no-store"});
     if(!csvResponse.ok) throw new Error(`players.csv の読み込みに失敗しました（HTTP ${csvResponse.status}）。`);
     const csvText = await csvResponse.text();
     const csvRows = parseCsv(csvText);
@@ -97,9 +93,9 @@
     state.players = csvRows.map(normalizePlayer);
 
     const jsonResults = await Promise.allSettled([
-      fetch(`./coaches.json?v=2.9.4`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
-      fetch(`./coachAptitude.json?v=2.9.4`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
-      fetch(`./boosters.json?v=2.9.4`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
+      fetch(`./coaches.json?v=2.9.7`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./coachAptitude.json?v=2.9.7`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./boosters.json?v=2.9.7`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
     ]);
 
     const fallbackNotes=[];
@@ -174,16 +170,11 @@
     el.innerHTML=`
       <div class="player-name">${escapeHtml(p.name)}${p.cardName && p.cardName!==p.name ? ` <span class="tag">${escapeHtml(p.cardName)}</span>`:""}</div>
       <div class="player-meta">
-        <span class="tag">ポジション：${escapeHtml(p.position||"未登録")}</span>
-        <span class="tag">総合値：${p.overall === "" ? "未登録" : escapeHtml(String(p.overall))}</span>
-        <span class="tag">右/左：${escapeHtml(p.foot)}</span><span class="tag">身長 ${p.height}cm</span>
+        <span class="tag">${escapeHtml(p.foot)}</span><span class="tag">${escapeHtml(p.position)}</span><span class="tag">身長 ${p.height}cm</span>
         ${personalityTag("逆足頻度", "weakFootFrequency", p.weakFootFrequency)}
         ${personalityTag("逆足精度", "weakFootAccuracy", p.weakFootAccuracy)}
         ${personalityTag("波", "conditionWave", p.conditionWave)}
-      </div>
-      <div class="player-skills">
-        <div class="player-skills-title">スキル</div>
-        <div class="player-skills-list">${String(p.skills||"").split(/[|,、]/).map(x=>x.trim()).filter(Boolean).map(x=>`<div>${escapeHtml(x)}</div>`).join("") || '<div class="player-skills-empty">未登録</div>'}</div>
+        <span class="tag">TP ${p.talentPoints}</span>
       </div>`;
   }
 
@@ -327,6 +318,22 @@
     return Number(state.selectedPlayer.talentPoints)-spent;
   }
 
+  function applyV297UiFixes(){
+    // 計算順の表示はスマホ1行に固定。既存HTMLの表記を見つけて安全に整形する。
+    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    const nodes=[]; let n;
+    while(n=walker.nextNode()) nodes.push(n);
+    nodes.forEach(node=>{
+      const t=node.nodeValue||"";
+      if(t.includes("選手側ブースター") && t.includes("監督ブースター") && t.includes("上限") && t.includes("監督適性")){
+        const span=document.createElement("span");
+        span.className="v297-calc-order";
+        span.textContent=t.trim();
+        node.parentNode.replaceChild(span,node);
+      }
+    });
+  }
+
   function renderAll(){
     renderPlayerSummary(); renderGroups(); renderStats();
     $("remainingPoints").textContent=state.selectedPlayer ? `${remainingPoints()} / ${state.selectedPlayer.talentPoints}` : "0 / 0";
@@ -372,8 +379,13 @@
   $("edgeBooster").addEventListener("change",e=>{state.edgeBooster=e.target.value;renderAll();});
 
   document.querySelectorAll(".booster-select").forEach((s,i)=>s.addEventListener("change",e=>{state.normalBoosters[i]=e.target.value;renderAll();}));
+  // 上昇幅ボタンは「押した値」だけを有効値とする。
+  // 同じボタンを再度押すと解除し、別の値を押すと前の選択を解除して新しい値だけを選択する。
   document.querySelectorAll("[data-add-value]").forEach(b=>b.addEventListener("click",()=>{
-    const v=Number(b.dataset.addValue); state.additionalValue=state.additionalValue===v?null:v; renderControls(); renderAll();
+    const v=Number(b.dataset.addValue);
+    state.additionalValue = state.additionalValue === v ? null : v;
+    renderControls();
+    renderAll();
   }));
 
   $("groupGrid").addEventListener("click",e=>{
@@ -403,27 +415,6 @@
     }catch(err){$("dataStatus").textContent=`CSV読み込みエラー：${err.message}`;}
   });
 
-  function moveResetButton(){
-    const btn=$("resetBtn");
-    const panel=document.querySelector(".allocation-panel");
-    const head=panel?.querySelector(".section-head");
-    if(!btn || !head || head.contains(btn)) return;
-    btn.classList.add("allocation-reset-btn");
-    head.appendChild(btn);
-  }
-
-  function fixCalculationOrderLayout(){
-    const candidates=[...document.querySelectorAll("*")].filter(el=>{
-      if(el.children.length) return false;
-      const t=(el.textContent||"").trim();
-      return t.startsWith("計算順");
-    });
-    candidates.forEach(el=>{
-      el.classList.add("calculation-order");
-      el.setAttribute("title", el.textContent.trim());
-    });
-  }
-
   function removeLiveLinkControls(){
     document.querySelectorAll("[data-live]").forEach(b=>b.remove());
     const live = document.getElementById("liveLinks");
@@ -436,8 +427,6 @@
 
   async function init(){
     applyV281Styles();
-    moveResetButton();
-    fixCalculationOrderLayout();
     removeLiveLinkControls();
     try{await loadExternalData();}
     catch(e){
