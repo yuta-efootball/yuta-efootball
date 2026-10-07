@@ -1,4 +1,4 @@
-/* style.css - v2.9.7 compact mobile layout */
+/* style.css - v2.9.8 compact mobile layout */
 :root{
   --bg:#0d0f13; --panel:#171a20; --panel2:#20242c; --border:#303641;
   --text:#f4f6f8; --muted:#aab1bc; --accent:#2f86ff; --danger:#d83a3a;
@@ -37,18 +37,8 @@ input[type=search],select{width:100%;min-height:38px;border-radius:9px;border:1p
   .app-shell{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px;align-items:start}.search-panel,.control-panel,.csv-panel{grid-column:1 / -1}.allocation-panel{grid-column:1}.stats-panel{grid-column:2}
   .group-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr}
 }
-/* v2.9.7 UI fixes */
+/* v2.9.8 UI fixes */
 .v297-calc-order{display:inline-block;white-space:nowrap;font-size:clamp(8px,2.5vw,11px);letter-spacing:-.02em;max-width:100%;overflow:hidden;text-overflow:clip;vertical-align:middle;}
 @media(max-width:390px){.v297-calc-order{font-size:8px;letter-spacing:-.04em;}}
 .segmented button.active{background:#fff !important;color:#111 !important;border-color:#fff !important;box-shadow:none;}
 .segmented button:not(.active){background:#11141a;color:#c7ccd4;}
-
-/* v2.9.7 */
-.control-grid .calculation-order,
-.control-grid .v297-calc-order,
-.control-grid .control-note.calculation-order{grid-column:span 2;}
-@media(max-width:520px){
-  .control-grid .calculation-order,
-  .control-grid .v297-calc-order,
-  .control-grid .control-note.calculation-order{grid-column:1 / -1;}
-}
