@@ -1,4 +1,4 @@
-/* script.js - v2.9.8 */
+/* script.js - v2.9.10 */
 (() => {
   "use strict";
 
@@ -15,9 +15,11 @@
     coachId: "",
     aptitude: "",
     normalBoosters: ["", ""],
+    normalValues: [null, null],
     additionalBooster: "",
     additionalValue: null,
-    edgeBooster: ""
+    edgeBooster: "",
+    edgeValue: null
   };
 
   const $ = id => document.getElementById(id);
@@ -82,7 +84,7 @@
   async function loadExternalData(){
     // 選手データはGitHub Pages上の players.csv を必ず正本として使用する。
     // v2.5では、players.csvの読み込み失敗時に選手フォールバックへ切り替えない。
-    const csvResponse = await fetch(`./players.csv?v=2.9.8`, {cache:"no-store"});
+    const csvResponse = await fetch(`./players.csv?v=2.9.10`, {cache:"no-store"});
     if(!csvResponse.ok) throw new Error(`players.csv の読み込みに失敗しました（HTTP ${csvResponse.status}）。`);
     const csvText = await csvResponse.text();
     const csvRows = parseCsv(csvText);
@@ -93,9 +95,9 @@
     state.players = csvRows.map(normalizePlayer);
 
     const jsonResults = await Promise.allSettled([
-      fetch(`./coaches.json?v=2.9.8`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
-      fetch(`./coachAptitude.json?v=2.9.8`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
-      fetch(`./boosters.json?v=2.9.8`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
+      fetch(`./coaches.json?v=2.9.10`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./coachAptitude.json?v=2.9.10`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()}),
+      fetch(`./boosters.json?v=2.9.10`, {cache:"no-store"}).then(r=>{if(!r.ok) throw new Error(r.status); return r.json()})
     ]);
 
     const fallbackNotes=[];
@@ -159,7 +161,19 @@
     fillSelect($("edgeBooster"), C.edgeStats.map(k=>({value:k,label:statNames[k]})));
     $("edgeBooster").value=state.edgeBooster;
 
-    document.querySelectorAll("[data-add-value]").forEach(b=>b.classList.toggle("active", Number(b.dataset.addValue)===state.additionalValue));
+    document.querySelectorAll("[data-add-value]").forEach(b=>{
+      const slot=b.closest(".booster-slot");
+      const select=slot?.querySelector("select");
+      const id=select?.id || "";
+      let selected=null;
+      if(id==="additionalBooster") selected=state.additionalValue;
+      else if(id==="edgeBooster") selected=state.edgeValue;
+      else {
+        const index=Array.from(document.querySelectorAll(".booster-select")).indexOf(select);
+        if(index>=0) selected=state.normalValues[index];
+      }
+      b.classList.toggle("active", Number(b.dataset.addValue)===selected);
+    });
   }
 
   function renderPlayerSummary(){
@@ -248,21 +262,23 @@
   // 選手側ブースター（通常2枠・追加ブースター・エッジ）の合算。
   function calculateSelectedPlayerBoosterBonus(){
     const bonus=Object.fromEntries(allStatKeys.map(k=>[k,0]));
-    state.normalBoosters.forEach(name=>{
+    state.normalBoosters.forEach((name,i)=>{
       if(!name) return;
-      (state.boosters[name]||[]).forEach(k=>addBoost(bonus,k,3));
+      const value=state.normalValues[i] ?? 3;
+      (state.boosters[name]||[]).forEach(k=>addBoost(bonus,k,value));
     });
-    if(state.additionalBooster && state.additionalValue){
-      (state.boosters[state.additionalBooster]||[]).forEach(k=>addBoost(bonus,k,state.additionalValue));
+    if(state.additionalBooster){
+      const value=state.additionalValue ?? 3;
+      (state.boosters[state.additionalBooster]||[]).forEach(k=>addBoost(bonus,k,value));
     }
-    if(state.edgeBooster) addBoost(bonus,state.edgeBooster,6);
+    if(state.edgeBooster) addBoost(bonus,state.edgeBooster,state.edgeValue ?? 6);
     return bonus;
   }
 
   function playerBoosterTargetSet(){
     const set=new Set();
     state.normalBoosters.forEach(name=>(state.boosters[name]||[]).forEach(k=>set.add(k)));
-    if(state.additionalBooster && state.additionalValue){
+    if(state.additionalBooster){
       (state.boosters[state.additionalBooster]||[]).forEach(k=>set.add(k));
     }
     if(state.edgeBooster) set.add(state.edgeBooster);
@@ -318,8 +334,8 @@
     return Number(state.selectedPlayer.talentPoints)-spent;
   }
 
-  function applyV297UiFixes(){
-    // 計算順の表示はスマホ1行に固定。既存HTMLの表記を見つけて安全に整形する。
+  function applyV2910UiFixes(){
+    // 計算順の表示をできる限り横長の1行にする。
     const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
     const nodes=[]; let n;
     while(n=walker.nextNode()) nodes.push(n);
@@ -327,11 +343,28 @@
       const t=node.nodeValue||"";
       if(t.includes("選手側ブースター") && t.includes("監督ブースター") && t.includes("上限") && t.includes("監督適性")){
         const span=document.createElement("span");
-        span.className="v297-calc-order";
+        span.className="v2910-calc-order";
         span.textContent=t.trim();
+        const parent=node.parentElement;
+        if(parent) parent.classList.add("v2910-calc-order-wrap");
         node.parentNode.replaceChild(span,node);
       }
     });
+
+    // 「配分をリセット」を能力配分の見出し右側へ移動する。
+    const reset=$("resetBtn");
+    if(reset){
+      let heading=null;
+      document.querySelectorAll("h2").forEach(h=>{
+        if((h.textContent||"").includes("能力配分")) heading=h;
+      });
+      const head=heading?.closest(".section-head") || heading?.parentElement;
+      if(head){
+        head.classList.add("v2910-allocation-head");
+        reset.classList.add("v2910-reset-btn");
+        heading.insertAdjacentElement("afterend",reset);
+      }
+    }
   }
 
   function renderAll(){
@@ -379,14 +412,24 @@
   $("edgeBooster").addEventListener("change",e=>{state.edgeBooster=e.target.value;renderAll();});
 
   document.querySelectorAll(".booster-select").forEach((s,i)=>s.addEventListener("change",e=>{state.normalBoosters[i]=e.target.value;renderAll();}));
-  // 上昇幅ボタンは「押した値」だけを有効値とする。
-  // 同じボタンを再度押すと解除し、別の値を押すと前の選択を解除して新しい値だけを選択する。
-  document.querySelectorAll("[data-add-value]").forEach(b=>b.addEventListener("click",()=>{
+  // 上昇幅ボタンは各ブースター枠ごとに独立して動作する。
+  // 同じ値を再度押すと既定値へ戻り、別の値を押すとその値を適用する。
+  document.addEventListener("click",e=>{
+    const b=e.target.closest("[data-add-value]");
+    if(!b) return;
+    const slot=b.closest(".booster-slot");
+    const select=slot?.querySelector("select");
+    const id=select?.id || "";
     const v=Number(b.dataset.addValue);
-    state.additionalValue = state.additionalValue === v ? null : v;
-    renderControls();
-    renderAll();
-  }));
+    if(id==="additionalBooster") state.additionalValue=state.additionalValue===v?null:v;
+    else if(id==="edgeBooster") state.edgeValue=state.edgeValue===v?null:v;
+    else {
+      const index=Array.from(document.querySelectorAll(".booster-select")).indexOf(select);
+      if(index>=0) state.normalValues[index]=state.normalValues[index]===v?null:v;
+      else return;
+    }
+    renderControls(); renderAll();
+  });
 
   $("groupGrid").addEventListener("click",e=>{
     const inc=e.target.closest("[data-inc]"), dec=e.target.closest("[data-dec]");
@@ -427,6 +470,7 @@
 
   async function init(){
     applyV281Styles();
+    applyV2910UiFixes();
     removeLiveLinkControls();
     try{await loadExternalData();}
     catch(e){

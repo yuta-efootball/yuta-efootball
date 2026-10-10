@@ -1,4 +1,4 @@
-/* style.css - v2.9.8 compact mobile layout */
+/* style.css - v2.9.10 compact mobile layout */
 :root{
   --bg:#0d0f13; --panel:#171a20; --panel2:#20242c; --border:#303641;
   --text:#f4f6f8; --muted:#aab1bc; --accent:#2f86ff; --danger:#d83a3a;
@@ -42,3 +42,11 @@ input[type=search],select{width:100%;min-height:38px;border-radius:9px;border:1p
 @media(max-width:390px){.v297-calc-order{font-size:8px;letter-spacing:-.04em;}}
 .segmented button.active{background:#fff !important;color:#111 !important;border-color:#fff !important;box-shadow:none;}
 .segmented button:not(.active){background:#11141a;color:#c7ccd4;}
+
+/* v2.9.10 UI fixes */
+.v2910-allocation-head{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:9px!important;flex-wrap:nowrap!important}
+.v2910-allocation-head h2{display:inline-block!important;flex:0 0 auto!important}
+.v2910-reset-btn{margin-left:3px!important;flex:0 0 auto!important;white-space:nowrap!important}
+.v2910-calc-order-wrap{display:flex!important;align-items:center!important;justify-content:flex-start!important;width:100%!important;max-width:100%!important;min-width:0!important;}
+.v2910-calc-order{display:block!important;white-space:nowrap!important;max-width:100%!important;width:100%!important;overflow:visible!important;text-overflow:clip!important;font-size:clamp(7px,2.2vw,11px)!important;letter-spacing:-.035em!important;line-height:1.2!important;}
+@media(max-width:390px){.v2910-calc-order{font-size:7.4px!important;letter-spacing:-.055em!important}}
